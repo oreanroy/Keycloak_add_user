@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>Create</title>
+    <script>
+      function validateForm() {
+         var u_name = document.forms["user_name_filed"]
+         console.log(u_name)
+       }
+    </script>
+  </head>
+  <body>
+    <h1>Create a new User</h1>
+    <div class="form">
+      <form action="/create" method="post">
+        <div>
+          <label for="user_name">Enter a user name: </label>
+          <input id="user_name" type="text" name="user_name_field">
+        </div>
+        <div>
+          <label for="paasword">Enter a  password : </label>
+          <input id="pass_word" type="password" name="password_field">
+        </div>
+        <div>
+          <label for="email"> Enter your emailid : </label>
+          <input id="email_id" type="email" name="email_address">
+        </div>
+        <input type="submit" value="Submit">
+      </form>
+    </div>
+    <div class="result">
+      <h4 id="result"></h4>
+    </div>
+    <div>
+      <li><a href="/">Go Back </a></li>
+    </div>
+</html>
