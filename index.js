@@ -2,15 +2,36 @@ const express = require('express')
 const app = express()
 const path = require('path')
 const bodyParser = require('body-parser')
-const request = require("request");
+const request = require("request")
+const Keycloak = require('keycloak-connect')
+const session = require('express-session')
+
+//create an in memory store for node adapter
+
+var memoryStore = new session.MemoryStore()
+var keycloak = new Keycloak({ store: memoryStore })
+
+//session
+app.use(session({
+  secret: 'putASecretHere',
+  resave: false,
+  saveUninitialized: true,
+  store: memoryStore
+}))
+
+app.use(keycloak.middleware ( { logout: '/logout'} ))
 
 
 app.use(bodyParser.urlencoded({ extended: false }))
+
+
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname+'/templates/index.html'))
 })
 
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> create route>>>>>>>>>>>>>>>>>>>>>>>>>
 app.get('/create', (req, res) => {
   res.sendFile(path.join(__dirname+'/templates/create.html'))
 })
@@ -50,7 +71,6 @@ app.post('/create', (req, res) => {
       if (error) throw new Error(error);
       console.log(body)
       console.log("user created")
-      res.send("user created")
   })
   })
 
@@ -63,8 +83,37 @@ app.post('/create', (req, res) => {
   res.send("creating user")
 })
 
+
+
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> get detail >>>>>>>>>>>>>>>>
+
 app.get("/get-detail", (req, res) => {
   res.send("this is the get user detail page, will require user to login to get correct deatil")
+})
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>> protected route >>>>>>>>>>>>>>>>>>>>>
+
+
+app.get("/protected", keycloak.protect(), (req, res) => {
+  console.log(res)
+  if (res.statusCode != 200){
+    res.redirect('/logout')
+  }
+  res.send("congrats you have accesed a protected route")
+})
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> verifier router >>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+app.get("/verifier", keycloak.protect('verifier'), (req, res) => {
+  console.log("i was called")
+  console.log(res)
+  if (res.statusCode != 200) {
+    res.redirect('/logout')
+  }
+  res.sendFile(path.join(__dirname+'/templates/verifier.html'))
 })
 
 app.listen(8000, () => {

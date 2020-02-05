@@ -1,0 +1,7 @@
+{
+    "realm": "create_user_realm",
+    "auth-server-url": "http://localhost:8080/auth",
+    "ssl-required": "external",
+    "resource": "protect_routes",
+    "public-client": true
+}
