@@ -3,14 +3,16 @@
     <title> Create User App </title>
   </head>
   <body>
-    <h1> Congrats you accessed a verifier route, soon you will se list of yousers here </h1>
-    <h2>verifer changed</h2>
+    <h1> verifier route only people with verifier role are allowed to access this.</h1>
     <h2>{{name}}</h2>
-    <div>
+    <div class="user_card" style="border: 2px;">
     {{#each users}}
-      <p>{{this.username}}</p>
+      <h4>Name {{this.username}}</h4>
+      <p>Enabled {{this.enabled}}</p>
+      {{#unless enabled}}
+        <button onclick="/enable a "><a>enble the user</a></button>
+      {{/unless}}
     {{/each}}
-    <p>this is the users {{users}}</p>
     </div>
     <div class="nav">
       <ul>
