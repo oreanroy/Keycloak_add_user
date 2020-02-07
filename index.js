@@ -57,14 +57,12 @@ const keycloakData = (obj) => {
 //>>>>>>>>>>>>>>>>>>>>>> routes >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 app.get('/', (req, res) => {
-  //res.sendFile(path.join(__dirname+'/templates/index.html'))
   res.render('index')
 })
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>> create route>>>>>>>>>>>>>>>>>>>>>>>>>
 app.get('/create', (req, res) => {
-  //res.sendFile(path.join(__dirname+'/templates/create.html'))
     res.render('create')
 })
 
@@ -89,9 +87,6 @@ app.post('/create', (req, res) => {
     if (error) throw new Error(error)
     const Body = JSON.parse(body)
     var access_token = Body.access_token
-    console.log(`the body ${ body }`)
-    console.log(`the acess token ${ access_token}`)
-    console.log(`the response ${response}`)
     var option = { method: 'POST',
       url: 'http://localhost:8080/auth/admin/realms/create_user_realm/users',
       headers:
@@ -105,11 +100,9 @@ app.post('/create', (req, res) => {
       console.log("user created")
   })
   })
-  console.log(user_name)
-  console.log(password)
   console.log("creating user")
   
-  res.send("creating user")
+  res.send("created user")
 })
 
 
@@ -138,13 +131,30 @@ app.get("/protected", keycloak.protect(), (req, res) => {
 
 app.get("/verifier", keycloak.protect('verifier'), (req, res) => {  
   cirRes = cirJSON.parse(cirJSON.stringify(res))
-  //console.log("the token")
-  console.log(cirRes.req.kauth.grant.access_token.token)
+  //the req object is a circular object so you cannot convert it to json normaly wihtout data loss.
+  //console.log(cirRes.req.kauth.grant.access_token.token)
+  allUser = []
+  access_token = cirRes.req.kauth.grant.access_token.token
+  var options = { method: 'GET',
+  url: 'http://localhost:8080/auth/admin/realms/create_user_realm/users',
+  headers: 
+   { 
+     'Content-Type': 'application/x-www-form-urlencoded',
+     Host: 'localhost:8080',
+     Accept: '*/*',
+     Authorization: `Bearer ${ access_token }` } }
+  request(options, function (error, response, body) {
+    if (error) { throw new Error(error) }
+      data = JSON.parse(body)
+      for (user in data){
+       allUser.push(data[user])
+      } 
+      //console.log(allUser)
+      res.render('verifier', {"users": allUser})
+    })
   if (res.statusCode != 200) {
     res.redirect('/logout')
   }
-  //res.sendFile(path.join(__dirname+'/templates/verifier.html'))
-  res.render('verifier')
 })
 
 

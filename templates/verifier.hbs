@@ -4,6 +4,14 @@
   </head>
   <body>
     <h1> Congrats you accessed a verifier route, soon you will se list of yousers here </h1>
+    <h2>verifer changed</h2>
+    <h2>{{name}}</h2>
+    <div>
+    {{#each users}}
+      <p>{{this.username}}</p>
+    {{/each}}
+    <p>this is the users {{users}}</p>
+    </div>
     <div class="nav">
       <ul>
         <li><a href="/logout">Logout</a></li>
