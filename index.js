@@ -5,7 +5,8 @@ const bodyParser = require('body-parser')
 const request = require("request")
 const Keycloak = require('keycloak-connect')
 const session = require('express-session')
-
+const util = require('util')
+const cirJSON = require('circular-json')
 //create an in memory store for node adapter
 
 var memoryStore = new session.MemoryStore()
@@ -19,12 +20,41 @@ app.use(session({
   store: memoryStore
 }))
 
+
 app.use(keycloak.middleware ( { logout: '/logout'} ))
 
 
 app.use(bodyParser.urlencoded({ extended: false }))
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> helper functions >>>>>>>>>>>>>>>>>>>
 
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return
+      }
+      seen.add(value)
+    }
+    return value
+  }
+}
+
+const keycloakData = (obj) => {
+  key = obj[0]
+  value = obj[1]
+  const seen = new WeakSet();
+  console.log("The key "+key)
+  console.log("The value "+value)
+      if (key === 'keycloak-token'){
+        seen.add(value)
+      }
+    return seen
+}
+
+
+//>>>>>>>>>>>>>>>>>>>>>> routes >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname+'/templates/index.html'))
@@ -109,12 +139,57 @@ app.get("/protected", keycloak.protect(), (req, res) => {
 
 app.get("/verifier", keycloak.protect('verifier'), (req, res) => {
   console.log("i was called")
-  console.log(res)
+  //console.log(util.inspect(res))
+  //console.log(JSON.stringify(res))
+  //Res = JSON.parse(JSON.stringify(util.inspect(res)))
+  //console.log(Res)
+  //console.log("type",typeof(Res))
+  //console.log("this is res zero")
+  //console.log(Res[0])
+  //console.log(Res.ServerResponse)
+  //console.log(res.keycloak-token)
+
+  // The req object is a circular object cannot be simply converted to json
+  //KeyData = keycloakData(res)
+  //console.log(KeyData)
+  //console.log(res)
+  //Res = JSON.parse(JSON.stringify(res, getCircularReplacer()))
+  //console.log(Res)
+  //console.log(Res.timeout)
+  console.log("lets test the circular json")
+  cirRes = cirJSON.parse(cirJSON.stringify(res))
+  norRes = JSON.parse(cirJSON.stringify(res))
+  console.log("this is the session")
+  //console.log(cirRes.session)
+  //console.log(res.headers.session)
+  //console.log(res.headers)
+  //console.log(cirRes)
+  console.log("this is the req")
+  //console.log(cirRes.req)
+  //console.log(cirJSON.parse(cirJSON.stringify(cirRes.req)))
+  console.log("this is the headers")
+  //console.log(cirRes.req.headers.sessionStore)
+  console.log("this is the sesisonStore")
+  //console.log(cirRes.req.sessionStore)
+  console.log("the kauth")
+  console.log(cirRes.req.kauth)
+  console.log("the session")
+  //console.log(cirRes.req.headers.session)
+  //console.log(res["keycloak-token"])
   if (res.statusCode != 200) {
     res.redirect('/logout')
   }
   res.sendFile(path.join(__dirname+'/templates/verifier.html'))
 })
+
+
+// >>>>>>>>>>>>>>> admin route >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+app.get("/admin", keycloak.protect('realm:admin'), (req, res) => {
+  res.send("congrats you accessed a admin protected route")
+})
+
+
 
 app.listen(8000, () => {
   console.log("app listening on port 8000!")
