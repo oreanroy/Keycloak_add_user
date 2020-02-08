@@ -44,9 +44,7 @@ const getCircularReplacer = () => {
 const keycloakData = (obj) => {
   key = obj[0]
   value = obj[1]
-  const seen = new WeakSet();
-  console.log("The key "+key)
-  console.log("The value "+value)
+  const seen = new WeakSet()
       if (key === 'keycloak-token'){
         seen.add(value)
       }
@@ -129,12 +127,44 @@ app.get("/protected", keycloak.protect(), (req, res) => {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>> verifier router >>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-app.get("/verifier", keycloak.protect('verifier'), (req, res) => {  
+app.get("/verifier", keycloak.protect('verifier'), (req, res) => {
+  const body = req.body
+  var user_id = req.body.user_id_field
+  var user_data = req.body.user_data_field
+  //console.log(req)
+  console.log("this is get")
+  console.log(req.body)
+  console.log(user_id)
+  console.log(user_data)  
   cirRes = cirJSON.parse(cirJSON.stringify(res))
   //the req object is a circular object so you cannot convert it to json normaly wihtout data loss.
   //console.log(cirRes.req.kauth.grant.access_token.token)
+  //<form action="/verifier" method="post">
+  //        <input type="text" name="user_id_field" value={{this.id}}>
+  //        <input type="text" name="user_data_field" value={{this}}><br>
+          
   allUser = []
   access_token = cirRes.req.kauth.grant.access_token.token
+  if (user_id != null){
+    user_data.enabled = true
+    var options = { method: 'PUT',
+  url: `http://localhost:8080/auth/admin/realms/create_user_realm/users/${ user_id }`,
+  headers: 
+   { 
+     
+     Accept: '*/*',
+     Authorization: `Bearer ${ access_token }`,
+     'Content-Type': 'application/json' },
+  body: `${ user_data }`,
+  json: true }
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+  //console.log(body);
+  console.log("user updated")
+})
+
+  }
+  //console.log(access_token)
   var options = { method: 'GET',
   url: 'http://localhost:8080/auth/admin/realms/create_user_realm/users',
   headers: 
@@ -155,6 +185,56 @@ app.get("/verifier", keycloak.protect('verifier'), (req, res) => {
   if (res.statusCode != 200) {
     res.redirect('/logout')
   }
+})
+
+
+app.post("/verifier", keycloak.protect('verifier'), (req, res) => {
+  var user_id = req.body.user_id_field
+  var user_data = null
+  console.log("this is post")
+  cirRes = cirJSON.parse(cirJSON.stringify(res))        
+  allUser = []
+  access_token = cirRes.req.kauth.grant.access_token.token
+  console.log(access_token)
+  if (user_id != null){
+    var options1 = { method: 'GET',
+      url: `http://localhost:8080/auth/admin/realms/create_user_realm/users/${ user_id }`,
+      headers: 
+       { 
+         Authorization: `Bearer ${ access_token }`,
+         'Content-Type': 'application/json' },
+         json: true }
+    request(options1, function (error, response, body) {
+      if (error) {
+        console.log("no the error occured here")
+        throw new Error(error)
+      }
+      console.log("the response of get")
+      user_data = body
+      user_data.enabled = true
+      //user_data = JSON.stringify(user_data)
+      console.log(user_data)
+      var options = { method: 'PUT',
+        url: `http://localhost:8080/auth/admin/realms/create_user_realm/users/${ user_id }`,
+        headers: 
+          { 
+            Authorization: `Bearer ${ access_token }`,
+            'Content-Type': 'application/json',
+            body: `${ user_data }`,
+            json: true }}
+        console.log(options)
+        request(options, function (error, response, body) {
+          if (error) {
+            console.log("an error occured")
+            throw new Error(error)
+          }
+          console.log(`the body ${body}`)
+          console.log(body)
+          console.log("user updated")
+          res.redirect('/verifier')
+        })
+     })
+  }  
 })
 
 

@@ -10,7 +10,12 @@
       <h4>Name {{this.username}}</h4>
       <p>Enabled {{this.enabled}}</p>
       {{#unless enabled}}
-        <button onclick="/enable a "><a>enble the user</a></button>
+        <p>{{this}}</p>
+        <form action="/verifier" method="post">
+          <input type="text" name="user_id_field" value={{this.id}}>
+          <input type="text" name="user_data_field" value={{this}}><br>
+          <input type="submit" value="Enable the user">
+        </form>
       {{/unless}}
     {{/each}}
     </div>
@@ -20,5 +25,9 @@
       </ul>
     <div>
   </body>
-   
 <html>
+ <!-- <form action="/create" method="post">
+        <div>
+          <label for="user_name">Enter a user name: </label>
+          <input id="user_name" type="text" name="user_name_field">
+        </div> -->
